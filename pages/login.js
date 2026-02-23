@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import API from '../utils/api';
 import { useRouter } from 'next/router';
+import { FiMail, FiLock, FiLogIn } from 'react-icons/fi';
 
 /**
  * Login Page Component
@@ -51,40 +52,46 @@ export default function Login() {
         <form onSubmit={handleSubmit}>
           <div style={{ marginBottom: '15px' }}>
             <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: '#333', marginBottom: '6px' }}>Email Address</label>
-            <input
-              type="email"
-              placeholder="you@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              style={{ width: '100%', padding: '12px', border: '2px solid #e0e0e0', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box', transition: 'border-color 0.3s ease' }}
-              onFocus={(e) => e.target.style.borderColor = '#FF4D6B'}
-              onBlur={(e) => e.target.style.borderColor = '#e0e0e0'}
-            />
+            <div style={{ position: 'relative' }}>
+              <FiMail style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#999' }} />
+              <input
+                type="email"
+                placeholder="you@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                style={{ width: '100%', padding: '12px 12px 12px 40px', border: '2px solid #e0e0e0', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box', transition: 'border-color 0.3s ease' }}
+                onFocus={(e) => e.target.style.borderColor = '#FF4D6B'}
+                onBlur={(e) => e.target.style.borderColor = '#e0e0e0'}
+              />
+            </div>
           </div>
 
           <div style={{ marginBottom: '20px' }}>
             <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: '#333', marginBottom: '6px' }}>Password</label>
-            <input
-              type="password"
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              style={{ width: '100%', padding: '12px', border: '2px solid #e0e0e0', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box', transition: 'border-color 0.3s ease' }}
-              onFocus={(e) => e.target.style.borderColor = '#FF4D6B'}
-              onBlur={(e) => e.target.style.borderColor = '#e0e0e0'}
-            />
+            <div style={{ position: 'relative' }}>
+              <FiLock style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#999' }} />
+              <input
+                type="password"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                style={{ width: '100%', padding: '12px 12px 12px 40px', border: '2px solid #e0e0e0', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box', transition: 'border-color 0.3s ease' }}
+                onFocus={(e) => e.target.style.borderColor = '#FF4D6B'}
+                onBlur={(e) => e.target.style.borderColor = '#e0e0e0'}
+              />
+            </div>
           </div>
 
           <button
             type="submit"
             disabled={isLoading}
-            style={{ width: '100%', padding: '12px', background: isLoading ? '#ccc' : '#F3797E', color: 'white', border: 'none', borderRadius: '6px', fontSize: '16px', fontWeight: 'bold', cursor: isLoading ? 'not-allowed' : 'pointer', transition: 'all 0.3s ease' }}
-            onMouseOver={(e) => !isLoading && (e.target.style.transform = 'translateY(-2px)')}
-            onMouseOut={(e) => !isLoading && (e.target.style.transform = 'translateY(0)')}
+            style={{ width: '100%', padding: '12px', background: isLoading ? '#ccc' : '#F3797E', color: 'white', border: 'none', borderRadius: '6px', fontSize: '16px', fontWeight: 'bold', cursor: isLoading ? 'not-allowed' : 'pointer', transition: 'all 0.3s ease', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+            onMouseOver={(e) => !isLoading && (e.currentTarget.style.transform = 'translateY(-2px)')}
+            onMouseOut={(e) => !isLoading && (e.currentTarget.style.transform = 'translateY(0)')}
           >
-            {isLoading ? 'Signing In...' : 'Sign In'}
+            {isLoading ? 'Signing In...' : <><FiLogIn /> Sign In</>}
           </button>
         </form>
 

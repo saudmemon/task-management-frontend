@@ -1,6 +1,18 @@
 import { useEffect, useState } from 'react';
 import API from '../utils/api';
 import { useRouter } from 'next/router';
+import {
+  FiPlus,
+  FiEdit2,
+  FiTrash2,
+  FiLogOut,
+  FiCheckCircle,
+  FiClock,
+  FiActivity,
+  FiList,
+  FiSave,
+  FiX
+} from 'react-icons/fi';
 
 /**
  * Dashboard Page Component
@@ -9,22 +21,22 @@ import { useRouter } from 'next/router';
  */
 export default function Dashboard() {
   const router = useRouter();
-  
+
   // Task state management
   const [tasks, setTasks] = useState([]);
   const [filteredTasks, setFilteredTasks] = useState([]);
   const [filter, setFilter] = useState('all');
-  
+
   // Form state for new tasks
   const [taskTitle, setTaskTitle] = useState('');
   const [taskDescription, setTaskDescription] = useState('');
-  
+
   // Edit mode state
   const [editingTaskId, setEditingTaskId] = useState(null);
   const [editTitle, setEditTitle] = useState('');
   const [editDescription, setEditDescription] = useState('');
   const [editStatus, setEditStatus] = useState('pending');
-  
+
   // Auth state
   const [user, setUser] = useState(null);
   const [isProtected, setIsProtected] = useState(false);
@@ -208,30 +220,35 @@ export default function Dashboard() {
     <div style={{ minHeight: '100vh', background: '#f5f7fb' }}>
       {/* Header */}
       <div style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', padding: '30px 40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 4px 12px rgba(102, 126, 234, 0.15)' }}>
-        <div>
-          <h1 style={{ fontSize: '28px', fontWeight: '700', color: 'white', margin: 0 }}>Task Dashboard</h1>
-          {user && <p style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.9)', margin: '6px 0 0 0' }}>Welcome back, <strong>{user.name}</strong>!</p>}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+          <div style={{ background: 'white', padding: '10px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <FiList style={{ fontSize: '24px', color: '#667eea' }} />
+          </div>
+          <div>
+            <h1 style={{ fontSize: '28px', fontWeight: '700', color: 'white', margin: 0 }}>Task Dashboard</h1>
+            {user && <p style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.9)', margin: '6px 0 0 0' }}>Welcome back, <strong>{user.name}</strong>!</p>}
+          </div>
         </div>
-        <button 
-          onClick={handleLogout} 
-          style={{ background: '#FE6337', color: 'white', padding: '10px 24px', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '14px', fontWeight: '600', transition: 'all 0.3s ease', boxShadow: '0 2px 8px rgba(254, 99, 55, 0.3)' }}
-          onMouseOver={(e) => { e.target.style.background = '#E54D23'; e.target.style.transform = 'translateY(-2px)'; e.target.style.boxShadow = '0 4px 12px rgba(254, 99, 55, 0.4)'; }}
-          onMouseOut={(e) => { e.target.style.background = '#FE6337'; e.target.style.transform = 'translateY(0)'; e.target.style.boxShadow = '0 2px 8px rgba(254, 99, 55, 0.3)'; }}
+        <button
+          onClick={handleLogout}
+          style={{ background: '#FE6337', color: 'white', padding: '10px 24px', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '14px', fontWeight: '600', transition: 'all 0.3s ease', boxShadow: '0 2px 8px rgba(254, 99, 55, 0.3)', display: 'flex', alignItems: 'center', gap: '8px' }}
+          onMouseOver={(e) => { e.currentTarget.style.background = '#E54D23'; e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 4px 12px rgba(254, 99, 55, 0.4)'; }}
+          onMouseOut={(e) => { e.currentTarget.style.background = '#FE6337'; e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 2px 8px rgba(254, 99, 55, 0.3)'; }}
         >
-          Logout
+          <FiLogOut /> Logout
         </button>
       </div>
 
       {/* Main Content */}
       <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '40px 20px' }}>
-        
+
         {/* Stats Row */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '24px', marginBottom: '40px' }}>
           {[
-            { label: 'Total Tasks', value: stats.total, bgColor: '#667eea', icon: '📋' },
-            { label: 'Completed', value: stats.completed, bgColor: '#27ae60', icon: '✔' },
-            { label: 'In Progress', value: stats.inProgress, bgColor: '#f39c12', icon: '⚙' },
-            { label: 'Pending', value: stats.pending, bgColor: '#e74c3c', icon: '⏱' }
+            { label: 'Total Tasks', value: stats.total, bgColor: '#667eea', icon: <FiList /> },
+            { label: 'Completed', value: stats.completed, bgColor: '#27ae60', icon: <FiCheckCircle /> },
+            { label: 'In Progress', value: stats.inProgress, bgColor: '#f39c12', icon: <FiActivity /> },
+            { label: 'Pending', value: stats.pending, bgColor: '#e74c3c', icon: <FiClock /> }
           ].map((stat, idx) => (
             <div key={idx} style={{ background: 'white', padding: '28px', borderRadius: '12px', boxShadow: '0 2px 12px rgba(0, 0, 0, 0.08)', borderTop: `4px solid ${stat.bgColor}`, transition: 'all 0.3s ease', cursor: 'pointer' }} onMouseOver={(e) => { e.currentTarget.style.boxShadow = '0 6px 20px rgba(0, 0, 0, 0.12)'; e.currentTarget.style.transform = 'translateY(-4px)'; }} onMouseOut={(e) => { e.currentTarget.style.boxShadow = '0 2px 12px rgba(0, 0, 0, 0.08)'; e.currentTarget.style.transform = 'translateY(0)'; }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
@@ -275,13 +292,13 @@ export default function Dashboard() {
               />
             </div>
 
-            <button 
-              type="submit" 
-              style={{ background: '#FE6337', color: 'white', padding: '12px 32px', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: '600', cursor: 'pointer', transition: 'all 0.3s ease', boxShadow: '0 2px 8px rgba(254, 99, 55, 0.3)' }}
-              onMouseOver={(e) => { e.target.style.background = '#E54D23'; e.target.style.transform = 'translateY(-2px)'; e.target.style.boxShadow = '0 4px 12px rgba(254, 99, 55, 0.4)'; }}
-              onMouseOut={(e) => { e.target.style.background = '#FE6337'; e.target.style.transform = 'translateY(0)'; e.target.style.boxShadow = '0 2px 8px rgba(254, 99, 55, 0.3)'; }}
+            <button
+              type="submit"
+              style={{ background: '#FE6337', color: 'white', padding: '12px 32px', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: '600', cursor: 'pointer', transition: 'all 0.3s ease', boxShadow: '0 2px 8px rgba(254, 99, 55, 0.3)', display: 'flex', alignItems: 'center', gap: '8px' }}
+              onMouseOver={(e) => { e.currentTarget.style.background = '#E54D23'; e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 4px 12px rgba(254, 99, 55, 0.4)'; }}
+              onMouseOut={(e) => { e.currentTarget.style.background = '#FE6337'; e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 2px 8px rgba(254, 99, 55, 0.3)'; }}
             >
-              + Add Task
+              <FiPlus /> Add Task
             </button>
           </form>
         </div>
@@ -328,8 +345,8 @@ export default function Dashboard() {
         ) : (
           <div style={{ display: 'grid', gap: '16px' }}>
             {filteredTasks.map((task) => (
-              <div 
-                key={task._id} 
+              <div
+                key={task._id}
                 style={{ background: 'white', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 2px 12px rgba(0, 0, 0, 0.08)', transition: 'all 0.3s ease', borderLeft: `5px solid ${task.status === 'completed' ? '#27ae60' : task.status === 'in-progress' ? '#f39c12' : '#e74c3c'}` }}
                 onMouseOver={(e) => { e.currentTarget.style.boxShadow = '0 6px 20px rgba(0, 0, 0, 0.12)'; e.currentTarget.style.transform = 'translateY(-3px)'; }}
                 onMouseOut={(e) => { e.currentTarget.style.boxShadow = '0 2px 12px rgba(0, 0, 0, 0.08)'; e.currentTarget.style.transform = 'translateY(0)'; }}
@@ -361,19 +378,19 @@ export default function Dashboard() {
                     <div style={{ display: 'flex', gap: '10px' }}>
                       <button
                         onClick={() => handleUpdateTask(task._id)}
-                        style={{ flex: 1, padding: '10px', background: '#27ae60', color: 'white', border: 'none', borderRadius: '6px', fontWeight: '600', cursor: 'pointer', fontSize: '13px', transition: 'all 0.2s' }}
+                        style={{ flex: 1, padding: '10px', background: '#27ae60', color: 'white', border: 'none', borderRadius: '6px', fontWeight: '600', cursor: 'pointer', fontSize: '13px', transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
                         onMouseOver={(e) => e.target.style.background = '#229954'}
                         onMouseOut={(e) => e.target.style.background = '#27ae60'}
                       >
-                        Save
+                        <FiSave /> Save
                       </button>
                       <button
                         onClick={handleEditCancel}
-                        style={{ flex: 1, padding: '10px', background: '#bdc3c7', color: 'white', border: 'none', borderRadius: '6px', fontWeight: '600', cursor: 'pointer', fontSize: '13px', transition: 'all 0.2s' }}
+                        style={{ flex: 1, padding: '10px', background: '#bdc3c7', color: 'white', border: 'none', borderRadius: '6px', fontWeight: '600', cursor: 'pointer', fontSize: '13px', transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
                         onMouseOver={(e) => e.target.style.background = '#95a5a6'}
                         onMouseOut={(e) => e.target.style.background = '#bdc3c7'}
                       >
-                        Cancel
+                        <FiX /> Cancel
                       </button>
                     </div>
                   </div>
@@ -404,19 +421,19 @@ export default function Dashboard() {
                     <div style={{ display: 'flex', gap: '8px', marginLeft: '16px' }}>
                       <button
                         onClick={() => handleEditStart(task)}
-                        style={{ padding: '6px 12px', background: '#FE6337', color: 'white', border: 'none', borderRadius: '6px', fontSize: '12px', fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s' }}
-                        onMouseOver={(e) => e.target.style.background = '#E54D23'}
-                        onMouseOut={(e) => e.target.style.background = '#FE6337'}
+                        style={{ padding: '8px 12px', background: '#FE6337', color: 'white', border: 'none', borderRadius: '6px', fontSize: '12px', fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: '6px' }}
+                        onMouseOver={(e) => e.currentTarget.style.background = '#E54D23'}
+                        onMouseOut={(e) => e.currentTarget.style.background = '#FE6337'}
                       >
-                        Edit
+                        <FiEdit2 /> Edit
                       </button>
                       <button
                         onClick={() => handleDeleteTask(task._id)}
-                        style={{ padding: '6px 12px', background: '#e74c3c', color: 'white', border: 'none', borderRadius: '6px', fontSize: '12px', fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s' }}
-                        onMouseOver={(e) => e.target.style.background = '#c0392b'}
-                        onMouseOut={(e) => e.target.style.background = '#e74c3c'}
+                        style={{ padding: '8px 12px', background: '#e74c3c', color: 'white', border: 'none', borderRadius: '6px', fontSize: '12px', fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: '6px' }}
+                        onMouseOver={(e) => e.currentTarget.style.background = '#c0392b'}
+                        onMouseOut={(e) => e.currentTarget.style.background = '#e74c3c'}
                       >
-                        Delete
+                        <FiTrash2 /> Delete
                       </button>
                     </div>
                   </div>
