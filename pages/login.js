@@ -140,7 +140,6 @@ export default function Login() {
             <div style={{ marginBottom: '32px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                 <label style={{ fontSize: '14px', fontWeight: '600' }}>Password</label>
-                <a href="#" style={{ fontSize: '13px', color: 'var(--primary)', fontWeight: '600', textDecoration: 'none' }}>Forgot?</a>
               </div>
               <div style={{ position: 'relative' }}>
                 <FiLock style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
