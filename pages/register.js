@@ -1,12 +1,8 @@
 import { useState } from 'react';
 import API from '../utils/api';
 import { useRouter } from 'next/router';
-import { FiUser, FiMail, FiLock, FiUserPlus, FiArrowRight } from 'react-icons/fi';
+import { FiUser, FiMail, FiLock, FiUserPlus, FiArrowRight, FiCheckCircle } from 'react-icons/fi';
 
-/**
- * Register Page Component
- * Upgraded with premium aesthetics
- */
 export default function Register() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -22,160 +18,170 @@ export default function Register() {
       alert(res.data.message || 'Registration successful');
       router.push('/login');
     } catch (err) {
-      const errorMessage = err.response?.data?.message || err.message || 'Registration failed';
-      alert(errorMessage);
+      alert(err.response?.data?.message || 'Registration failed');
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div style={{ 
-      minHeight: '100vh', 
-      background: 'radial-gradient(circle at top right, #8b5cf6, transparent), radial-gradient(circle at bottom left, #ec4899, transparent), #f8fafc',
-      display: 'flex', 
-      alignItems: 'center', 
-      justifyContent: 'center',
-      padding: '20px'
-    }}>
-      <div className="glass" style={{ 
-        maxWidth: '440px', 
-        width: '100%', 
-        padding: '48px', 
-        borderRadius: '24px', 
-        boxShadow: 'var(--shadow-premium)',
-        animation: 'fadeIn 0.6s ease-out'
-      }}>
-        <div style={{ textAlign: 'center', marginBottom: '40px' }}>
-          <div style={{ 
-            width: '64px', 
-            height: '64px', 
-            background: 'var(--secondary)', 
-            borderRadius: '16px', 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'center', 
-            margin: '0 auto 20px',
-            boxShadow: '0 8px 16px rgba(236, 72, 153, 0.3)'
-          }}>
-            <FiUserPlus style={{ fontSize: '28px', color: 'white' }} />
+    <div style={{ minHeight: '100vh', display: 'flex', background: 'white', overflow: 'hidden' }}>
+      {/* Left Side: Branding (Desktop Only) */}
+      <div style={{ 
+        flex: '1.2', 
+        position: 'relative', 
+        background: '#0f172a', 
+        display: 'flex', 
+        flexDirection: 'column', 
+        justifyContent: 'center', 
+        padding: '80px',
+        color: 'white',
+        overflow: 'hidden'
+      }} className="auth-sidebar">
+        <div style={{ position: 'absolute', top: '-10%', right: '-10%', width: '400px', height: '400px', background: 'var(--secondary)', borderRadius: '50%', filter: 'blur(120px)', opacity: '0.4' }}></div>
+        <div style={{ position: 'absolute', bottom: '-10%', left: '-10%', width: '300px', height: '300px', background: 'var(--accent)', borderRadius: '50%', filter: 'blur(100px)', opacity: '0.3' }}></div>
+
+        <div style={{ position: 'relative', zIndex: 10 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '40px' }}>
+            <div style={{ background: 'var(--secondary)', padding: '10px', borderRadius: '12px' }}>
+              <FiCheckCircle size={32} />
+            </div>
+            <h2 style={{ fontSize: '28px', fontWeight: '800', letterSpacing: '-1px' }}>TaskMaster</h2>
           </div>
-          <h1 style={{ fontSize: '32px', fontWeight: '800', color: 'var(--text-main)', letterSpacing: '-0.5px', marginBottom: '8px' }}>Create Account</h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: '16px' }}>Start organizing your life today</p>
+
+          <h1 style={{ fontSize: '56px', fontWeight: '800', lineHeight: '1.1', marginBottom: '24px', letterSpacing: '-2px' }}>
+            Join the elite <br />
+            <span style={{ color: 'var(--secondary)' }}>workspace.</span>
+          </h1>
+          <p style={{ fontSize: '20px', color: '#94a3b8', maxWidth: '480px', lineHeight: '1.6', marginBottom: '48px' }}>
+            Create an account in seconds and start experiencing the most intuitive task management system ever built.
+          </p>
+
+          <div style={{ display: 'grid', gap: '20px' }}>
+            {[
+              'Unlimited task creations',
+              'Advanced progress analytics',
+              'Custom workspace themes'
+            ].map((feature, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '16px', fontWeight: '500', color: '#cbd5e1' }}>
+                <FiCheckCircle style={{ color: 'var(--secondary)' }} /> {feature}
+              </div>
+            ))}
+          </div>
         </div>
 
-        <form onSubmit={handleSubmit}>
-          <div style={{ marginBottom: '20px' }}>
-            <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: 'var(--text-main)', marginBottom: '8px' }}>Full Name</label>
-            <div style={{ position: 'relative' }}>
-              <FiUser style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-              <input
-                type="text"
-                placeholder="John Doe"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-                style={{ 
-                  width: '100%', 
-                  padding: '14px 16px 14px 48px', 
-                  background: 'white',
-                  border: '1px solid var(--border-light)', 
-                  borderRadius: '12px', 
-                  fontSize: '15px',
-                  outline: 'none',
-                  boxShadow: 'var(--shadow-sm)'
-                }}
-              />
-            </div>
+        <img 
+          src="/auth-visual.png" 
+          alt="Visual" 
+          style={{ 
+            position: 'absolute', 
+            bottom: '-100px', 
+            right: '-100px', 
+            width: '600px', 
+            opacity: '0.5',
+            transform: 'scaleX(-1) rotate(10deg)',
+            pointerEvents: 'none',
+            filter: 'hue-rotate(180deg)'
+          }} 
+        />
+      </div>
+
+      {/* Right Side: Register Form */}
+      <div style={{ 
+        flex: '1', 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center', 
+        padding: '40px',
+        background: 'var(--bg-app)'
+      }}>
+        <div style={{ maxWidth: '400px', width: '100%', animation: 'fadeIn 0.8s ease-out' }}>
+          <div style={{ marginBottom: '40px' }}>
+            <h3 style={{ fontSize: '32px', fontWeight: '800', color: 'var(--text-main)', marginBottom: '8px' }}>Create Account</h3>
+            <p style={{ color: 'var(--text-muted)' }}>Get started for free. No credit card required.</p>
           </div>
 
-          <div style={{ marginBottom: '20px' }}>
-            <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: 'var(--text-main)', marginBottom: '8px' }}>Email Address</label>
-            <div style={{ position: 'relative' }}>
-              <FiMail style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-              <input
-                type="email"
-                placeholder="name@company.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                style={{ 
-                  width: '100%', 
-                  padding: '14px 16px 14px 48px', 
-                  background: 'white',
-                  border: '1px solid var(--border-light)', 
-                  borderRadius: '12px', 
-                  fontSize: '15px',
-                  outline: 'none',
-                  boxShadow: 'var(--shadow-sm)'
-                }}
-              />
+          <form onSubmit={handleSubmit}>
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', marginBottom: '8px' }}>Full Name</label>
+              <div style={{ position: 'relative' }}>
+                <FiUser style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                <input
+                  type="text"
+                  placeholder="John Doe"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                  style={{ width: '100%', padding: '14px 14px 14px 44px', borderRadius: '12px', border: '1px solid var(--border-light)', outline: 'none', fontSize: '15px' }}
+                />
+              </div>
             </div>
-          </div>
 
-          <div style={{ marginBottom: '32px' }}>
-            <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: 'var(--text-main)', marginBottom: '8px' }}>Password</label>
-            <div style={{ position: 'relative' }}>
-              <FiLock style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-              <input
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                style={{ 
-                  width: '100%', 
-                  padding: '14px 16px 14px 48px', 
-                  background: 'white',
-                  border: '1px solid var(--border-light)', 
-                  borderRadius: '12px', 
-                  fontSize: '15px',
-                  outline: 'none',
-                  boxShadow: 'var(--shadow-sm)'
-                }}
-              />
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', marginBottom: '8px' }}>Email</label>
+              <div style={{ position: 'relative' }}>
+                <FiMail style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                <input
+                  type="email"
+                  placeholder="hello@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  style={{ width: '100%', padding: '14px 14px 14px 44px', borderRadius: '12px', border: '1px solid var(--border-light)', outline: 'none', fontSize: '15px' }}
+                />
+              </div>
             </div>
+
+            <div style={{ marginBottom: '32px' }}>
+              <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', marginBottom: '8px' }}>Password</label>
+              <div style={{ position: 'relative' }}>
+                <FiLock style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                <input
+                  type="password"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  style={{ width: '100%', padding: '14px 14px 14px 44px', borderRadius: '12px', border: '1px solid var(--border-light)', outline: 'none', fontSize: '15px' }}
+                />
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={isLoading}
+              style={{ 
+                width: '100%', 
+                padding: '16px', 
+                background: 'var(--secondary)', 
+                color: 'white', 
+                borderRadius: '12px', 
+                fontSize: '16px', 
+                fontWeight: '700',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '10px',
+                boxShadow: '0 10px 20px rgba(236, 72, 153, 0.2)'
+              }}
+            >
+              {isLoading ? 'Creating...' : <>Join Now <FiArrowRight /></>}
+            </button>
+          </form>
+
+          <div style={{ marginTop: '32px', textAlign: 'center' }}>
+            <p style={{ color: 'var(--text-muted)', fontSize: '14px' }}>
+              Already have an account? <a href="/login" style={{ color: 'var(--secondary)', fontWeight: '700', textDecoration: 'none' }}>Sign in</a>
+            </p>
           </div>
-
-          <button
-            type="submit"
-            disabled={isLoading}
-            style={{ 
-              width: '100%', 
-              padding: '16px', 
-              background: 'var(--secondary)', 
-              color: 'white', 
-              borderRadius: '12px', 
-              fontSize: '16px', 
-              fontWeight: '700',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '10px',
-              boxShadow: '0 4px 12px rgba(236, 72, 153, 0.2)'
-            }}
-          >
-            {isLoading ? (
-              <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <div style={{ width: '18px', height: '18px', border: '2px solid white', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }}></div>
-                Creating Account...
-              </span>
-            ) : (
-              <>Create Account <FiArrowRight /></>
-            )}
-          </button>
-        </form>
-
-        <div style={{ marginTop: '32px', textAlign: 'center', borderTop: '1px solid var(--border-light)', paddingTop: '24px' }}>
-          <p style={{ color: 'var(--text-muted)', fontSize: '14px' }}>
-            Already have an account? <a href="/login" style={{ color: 'var(--secondary)', textDecoration: 'none', fontWeight: '700' }}>Sign in here</a>
-          </p>
         </div>
       </div>
 
       <style jsx>{`
-        @keyframes spin {
-          to { transform: rotate(360deg); }
+        @media (max-width: 1024px) {
+          .auth-sidebar {
+            display: none !important;
+          }
         }
       `}</style>
     </div>
