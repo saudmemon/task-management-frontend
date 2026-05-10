@@ -224,7 +224,7 @@ export default function Dashboard() {
             <button 
               onClick={() => setIsAddingTask(true)}
               style={{ 
-                background: '#6366f1', 
+                background: '#0d9488', 
                 color: 'white', 
                 padding: '14px 28px', 
                 borderRadius: '14px', 
@@ -233,7 +233,7 @@ export default function Dashboard() {
                 display: 'flex', 
                 alignItems: 'center', 
                 gap: '10px', 
-                boxShadow: '0 10px 20px rgba(99, 102, 241, 0.2)' 
+                boxShadow: '0 10px 20px rgba(13, 148, 136, 0.2)' 
               }}
             >
               <FiPlus size={20} /> New Task
@@ -277,7 +277,7 @@ export default function Dashboard() {
                   style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0', background: '#f8fafc', fontSize: '14px', outline: 'none', minHeight: '80px', resize: 'none' }}
                 />
                 <div style={{ display: 'flex', gap: '12px', marginTop: '16px' }}>
-                  <button onClick={handleAddTask} style={{ flex: 1, background: '#6366f1', color: 'white', padding: '12px', borderRadius: '10px', fontWeight: '700' }}>Create</button>
+                  <button onClick={handleAddTask} style={{ flex: 1, background: '#0d9488', color: 'white', padding: '12px', borderRadius: '10px', fontWeight: '700' }}>Create</button>
                   <button onClick={() => setIsAddingTask(false)} style={{ flex: 1, background: '#e2e8f0', padding: '12px', borderRadius: '10px', fontWeight: '700' }}>Cancel</button>
                 </div>
               </div>
