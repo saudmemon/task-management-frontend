@@ -219,7 +219,18 @@ export default function Dashboard() {
             </div>
             <button 
               onClick={() => setIsAddingTask(true)}
-              style={{ background: 'var(--primary)', color: 'white', padding: '14px 28px', borderRadius: '14px', fontWeight: '700', fontSize: '15px', display: 'flex', alignItems: 'center', gap: '10px', boxShadow: '0 10px 20px rgba(99, 102, 241, 0.2)' }}
+              style={{ 
+                background: '#6366f1', 
+                color: 'white', 
+                padding: '14px 28px', 
+                borderRadius: '14px', 
+                fontWeight: '700', 
+                fontSize: '15px', 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '10px', 
+                boxShadow: '0 10px 20px rgba(99, 102, 241, 0.2)' 
+              }}
             >
               <FiPlus size={20} /> New Task
             </button>
