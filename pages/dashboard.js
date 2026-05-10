@@ -17,7 +17,8 @@ import {
   FiSettings,
   FiPieChart,
   FiMenu,
-  FiX
+  FiX,
+  FiZap
 } from 'react-icons/fi';
 
 const fetcher = (url) => API.get(url).then((res) => res.data);
@@ -129,7 +130,7 @@ export default function Dashboard() {
       }} className="sidebar">
         <div style={{ padding: '32px 24px', display: 'flex', alignItems: 'center', gap: '12px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
           <div style={{ background: 'var(--primary)', padding: '8px', borderRadius: '10px' }}>
-            <FiCheckCircle size={24} />
+            <FiZap size={24} />
           </div>
           <span style={{ fontSize: '20px', fontWeight: '800', letterSpacing: '-0.5px' }}>TaskMaster</span>
         </div>

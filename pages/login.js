@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import API from '../utils/api';
 import { useRouter } from 'next/router';
-import { FiMail, FiLock, FiLogIn, FiArrowRight, FiCheckCircle } from 'react-icons/fi';
+import { FiMail, FiLock, FiLogIn, FiArrowRight, FiCheckCircle, FiZap } from 'react-icons/fi';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -64,7 +64,7 @@ export default function Login() {
         <div style={{ position: 'relative', zIndex: 10 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '40px' }}>
             <div style={{ background: 'var(--primary)', padding: '10px', borderRadius: '12px' }}>
-              <FiCheckCircle size={32} />
+              <FiZap size={32} />
             </div>
             <h2 style={{ fontSize: '28px', fontWeight: '800', letterSpacing: '-1px' }}>TaskMaster</h2>
           </div>

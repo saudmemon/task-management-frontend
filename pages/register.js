@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import API from '../utils/api';
 import { useRouter } from 'next/router';
-import { FiUser, FiMail, FiLock, FiUserPlus, FiArrowRight, FiCheckCircle } from 'react-icons/fi';
+import { FiUser, FiMail, FiLock, FiUserPlus, FiArrowRight, FiCheckCircle, FiZap } from 'react-icons/fi';
 
 export default function Register() {
   const [name, setName] = useState('');
@@ -44,7 +44,7 @@ export default function Register() {
         <div style={{ position: 'relative', zIndex: 10 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '40px' }}>
             <div style={{ background: 'var(--secondary)', padding: '10px', borderRadius: '12px' }}>
-              <FiCheckCircle size={32} />
+              <FiZap size={32} />
             </div>
             <h2 style={{ fontSize: '28px', fontWeight: '800', letterSpacing: '-1px' }}>TaskMaster</h2>
           </div>
