@@ -58,7 +58,10 @@ export default function Dashboard() {
 
   const handleAddTask = async (e) => {
     e.preventDefault();
-    if (!taskTitle.trim()) return;
+    if (!taskTitle.trim()) {
+      alert('Please enter a task title');
+      return;
+    }
     try {
       const newTask = { title: taskTitle, description: taskDescription, status: 'pending' };
       mutate([...tasks, { ...newTask, _id: 'temp-' + Date.now() }], false);
@@ -259,22 +262,22 @@ export default function Dashboard() {
           {/* Task Grid */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '24px' }}>
             {isAddingTask && (
-              <div className="glass" style={{ padding: '24px', borderRadius: '24px', border: '2px dashed var(--primary)', animation: 'fadeIn 0.4s' }}>
+              <div className="glass" style={{ padding: '24px', borderRadius: '24px', border: '2px dashed #6366f1', animation: 'fadeIn 0.4s', background: 'white' }}>
                 <input 
-                  placeholder="Task Title..." 
+                  placeholder="Task Title (Required)" 
                   value={taskTitle} 
                   onChange={(e) => setTaskTitle(e.target.value)}
-                  style={{ width: '100%', border: 'none', background: 'transparent', fontSize: '18px', fontWeight: '700', outline: 'none', marginBottom: '12px' }}
+                  style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0', background: '#f8fafc', fontSize: '16px', fontWeight: '700', outline: 'none', marginBottom: '12px' }}
                 />
                 <textarea 
                   placeholder="Description..." 
                   value={taskDescription} 
                   onChange={(e) => setTaskDescription(e.target.value)}
-                  style={{ width: '100%', border: 'none', background: 'transparent', fontSize: '14px', outline: 'none', minHeight: '80px', resize: 'none' }}
+                  style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0', background: '#f8fafc', fontSize: '14px', outline: 'none', minHeight: '80px', resize: 'none' }}
                 />
                 <div style={{ display: 'flex', gap: '12px', marginTop: '16px' }}>
-                  <button onClick={handleAddTask} style={{ flex: 1, background: 'var(--primary)', color: 'white', padding: '10px', borderRadius: '10px', fontWeight: '700' }}>Create</button>
-                  <button onClick={() => setIsAddingTask(false)} style={{ flex: 1, background: 'var(--border-light)', padding: '10px', borderRadius: '10px', fontWeight: '700' }}>Cancel</button>
+                  <button onClick={handleAddTask} style={{ flex: 1, background: '#6366f1', color: 'white', padding: '12px', borderRadius: '10px', fontWeight: '700' }}>Create</button>
+                  <button onClick={() => setIsAddingTask(false)} style={{ flex: 1, background: '#e2e8f0', padding: '12px', borderRadius: '10px', fontWeight: '700' }}>Cancel</button>
                 </div>
               </div>
             )}
