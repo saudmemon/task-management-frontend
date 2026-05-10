@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import API from '../utils/api';
 import { useRouter } from 'next/router';
+import useSWR from 'swr';
 import {
   FiPlus,
   FiEdit2,
@@ -11,23 +12,39 @@ import {
   FiActivity,
   FiList,
   FiSave,
-  FiX
+  FiX,
+  FiSearch,
+  FiFilter,
+  FiUser
 } from 'react-icons/fi';
 
+// SWR Fetcher using our API instance
+const fetcher = (url) => API.get(url).then((res) => res.data);
+
 /**
- * Dashboard Page Component
- * Main application interface for task management
- * Features: Create, Read, Update, Delete tasks with filtering
+ * Premium Dashboard Component
+ * Features: SWR caching, Optimistic UI, Glassmorphism design
  */
 export default function Dashboard() {
   const router = useRouter();
+  const [user, setUser] = useState(null);
+  const [isProtected, setIsProtected] = useState(false);
 
-  // Task state management
-  const [tasks, setTasks] = useState([]);
-  const [filteredTasks, setFilteredTasks] = useState([]);
+  // Task state management via SWR
+  const { data: taskData, error, mutate } = useSWR(isProtected ? '/tasks' : null, fetcher, {
+    revalidateOnFocus: true,
+    dedupingInterval: 5000
+  });
+
+  const tasks = useMemo(() => {
+    if (!taskData) return [];
+    return Array.isArray(taskData) ? taskData : taskData.tasks || [];
+  }, [taskData]);
+
+  // UI State
   const [filter, setFilter] = useState('all');
-
-  // Form state for new tasks
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isAddingTask, setIsAddingTask] = useState(false);
   const [taskTitle, setTaskTitle] = useState('');
   const [taskDescription, setTaskDescription] = useState('');
 
@@ -37,14 +54,6 @@ export default function Dashboard() {
   const [editDescription, setEditDescription] = useState('');
   const [editStatus, setEditStatus] = useState('pending');
 
-  // Auth state
-  const [user, setUser] = useState(null);
-  const [isProtected, setIsProtected] = useState(false);
-
-  /**
-   * Check authentication token and load user data on component mount
-   * Redirects to login if no token is found
-   */
   useEffect(() => {
     const token = localStorage.getItem('token');
     const userData = localStorage.getItem('user');
@@ -54,11 +63,9 @@ export default function Dashboard() {
       return;
     }
 
-    // Parse and load saved user information
     if (userData) {
       try {
-        const parsedUser = JSON.parse(userData);
-        setUser(parsedUser);
+        setUser(JSON.parse(userData));
       } catch (err) {
         console.error('Failed to parse user data', err);
       }
@@ -67,382 +74,385 @@ export default function Dashboard() {
     setIsProtected(true);
   }, [router]);
 
-  /**
-   * Fetch all tasks from the server
-   * Handles authentication errors by redirecting to login
-   */
-  const fetchTasks = async () => {
-    try {
-      const res = await API.get('/tasks');
-      const taskData = Array.isArray(res.data) ? res.data : res.data.tasks || [];
-      setTasks(taskData);
-    } catch (err) {
-      const errorMessage = err.response?.data?.message || err.message || 'Failed to fetch tasks';
-      console.error('Fetch error:', errorMessage);
-      // Redirect to login if token is invalid
-      if (err.response?.status === 401) {
-        localStorage.removeItem('token');
-        router.push('/login');
-      }
-    }
-  };
-
-  /**
-   * Load tasks when dashboard is authenticated
-   */
-  useEffect(() => {
-    if (isProtected) {
-      fetchTasks();
-    }
-  }, [isProtected]);
-
-  /**
-   * Create a new task
-   * Validates title before submission
-   */
   const handleAddTask = async (e) => {
     e.preventDefault();
-    if (!taskTitle.trim()) {
-      alert('Please enter a task title');
-      return;
-    }
+    if (!taskTitle.trim()) return;
+
     try {
-      await API.post('/tasks', { title: taskTitle, description: taskDescription });
+      const newTask = { title: taskTitle, description: taskDescription, status: 'pending' };
+      // Optimistic Update
+      mutate([...tasks, { ...newTask, _id: 'temp-' + Date.now() }], false);
+      
+      await API.post('/tasks', newTask);
       setTaskTitle('');
       setTaskDescription('');
-      fetchTasks();
+      setIsAddingTask(false);
+      mutate(); // Trigger revalidation
     } catch (err) {
-      const errorMessage = err.response?.data?.message || err.message || 'Error adding task';
-      alert(errorMessage);
-      console.error('Add error:', err);
+      alert('Failed to add task');
+      mutate();
     }
   };
 
-  /**
-   * Delete a task after user confirmation
-   */
   const handleDeleteTask = async (taskId) => {
-    if (!window.confirm('Are you sure you want to delete this task?')) {
-      return;
-    }
-
+    if (!window.confirm('Delete this task?')) return;
     try {
+      mutate(tasks.filter(t => t._id !== taskId), false);
       await API.delete(`/tasks/${taskId}`);
-      setTasks(tasks.filter(task => task._id !== taskId));
+      mutate();
     } catch (err) {
-      const errorMessage = err.response?.data?.message || err.message || 'Error deleting task';
-      alert(errorMessage);
-      console.error('Delete error:', err);
+      alert('Failed to delete task');
+      mutate();
     }
   };
 
-  /**
-   * Prepare task for editing by loading its data into edit state
-   */
-  const handleEditStart = (task) => {
-    setEditingTaskId(task._id);
-    setEditTitle(task.title);
-    setEditDescription(task.description);
-    setEditStatus(task.status || 'pending');
-  };
-
-  /**
-   * Update task with new values
-   * Validates title before submission
-   */
   const handleUpdateTask = async (taskId) => {
-    if (!editTitle.trim()) {
-      alert('Task title cannot be empty');
-      return;
-    }
-
     try {
-      await API.put(`/tasks/${taskId}`, {
-        title: editTitle,
-        description: editDescription,
-        status: editStatus
-      });
-
-      setTasks(tasks.map(task =>
-        task._id === taskId
-          ? { ...task, title: editTitle, description: editDescription, status: editStatus }
-          : task
-      ));
-
+      const updatedData = { title: editTitle, description: editDescription, status: editStatus };
+      mutate(tasks.map(t => t._id === taskId ? { ...t, ...updatedData } : t), false);
+      await API.put(`/tasks/${taskId}`, updatedData);
       setEditingTaskId(null);
+      mutate();
     } catch (err) {
-      const errorMessage = err.response?.data?.message || err.message || 'Error updating task';
-      alert(errorMessage);
-      console.error('Update error:', err);
+      alert('Failed to update task');
+      mutate();
     }
   };
 
-  /**
-   * Cancel editing and reset edit state
-   */
-  const handleEditCancel = () => {
-    setEditingTaskId(null);
-  };
-
-  /**
-   * Clear user session and redirect to login
-   */
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     router.push('/login');
   };
 
-  /**
-   * Filter tasks based on selected filter
-   */
-  useEffect(() => {
-    const filtered = tasks.filter(task => {
-      if (filter === 'completed') return task.status === 'completed';
-      if (filter === 'pending') return task.status === 'pending';
-      if (filter === 'in-progress') return task.status === 'in-progress';
-      return true;
+  const filteredTasks = useMemo(() => {
+    return tasks.filter(task => {
+      const matchesFilter = filter === 'all' || task.status === filter;
+      const matchesSearch = task.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                           (task.description && task.description.toLowerCase().includes(searchQuery.toLowerCase()));
+      return matchesFilter && matchesSearch;
     });
-    setFilteredTasks(filtered);
-  }, [tasks, filter]);
+  }, [tasks, filter, searchQuery]);
 
-  /**
-   * Calculate task statistics for dashboard cards
-   */
-  const stats = {
+  const stats = useMemo(() => ({
     total: tasks.length,
     completed: tasks.filter(t => t.status === 'completed').length,
     pending: tasks.filter(t => t.status === 'pending').length,
     inProgress: tasks.filter(t => t.status === 'in-progress').length
-  };
+  }), [tasks]);
+
+  if (!isProtected) return null;
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f5f7fb' }}>
-      {/* Header */}
-      <div style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', padding: '30px 40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 4px 12px rgba(102, 126, 234, 0.15)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-          <div style={{ background: 'white', padding: '10px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <FiList style={{ fontSize: '24px', color: '#667eea' }} />
+    <div style={{ minHeight: '100vh', background: 'var(--bg-app)', paddingBottom: '80px' }}>
+      {/* Header / Navbar */}
+      <nav style={{ 
+        background: 'white', 
+        padding: '16px 40px', 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center',
+        position: 'sticky',
+        top: 0,
+        zIndex: 100,
+        boxShadow: 'var(--shadow-sm)',
+        borderBottom: '1px solid var(--border-light)'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{ 
+            background: 'var(--primary)', 
+            padding: '10px', 
+            borderRadius: '12px', 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center',
+            boxShadow: '0 4px 12px rgba(99, 102, 241, 0.2)'
+          }}>
+            <FiList style={{ fontSize: '20px', color: 'white' }} />
           </div>
-          <div>
-            <h1 style={{ fontSize: '28px', fontWeight: '700', color: 'white', margin: 0 }}>Task Dashboard</h1>
-            {user && <p style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.9)', margin: '6px 0 0 0' }}>Welcome back, <strong>{user.name}</strong>!</p>}
-          </div>
+          <h1 style={{ fontSize: '20px', fontWeight: '800', color: 'var(--text-main)', letterSpacing: '-0.5px' }}>TaskMaster</h1>
         </div>
-        <button
-          onClick={handleLogout}
-          style={{ background: '#FE6337', color: 'white', padding: '10px 24px', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '14px', fontWeight: '600', transition: 'all 0.3s ease', boxShadow: '0 2px 8px rgba(254, 99, 55, 0.3)', display: 'flex', alignItems: 'center', gap: '8px' }}
-          onMouseOver={(e) => { e.currentTarget.style.background = '#E54D23'; e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 4px 12px rgba(254, 99, 55, 0.4)'; }}
-          onMouseOut={(e) => { e.currentTarget.style.background = '#FE6337'; e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 2px 8px rgba(254, 99, 55, 0.3)'; }}
-        >
-          <FiLogOut /> Logout
-        </button>
-      </div>
 
-      {/* Main Content */}
-      <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '40px 20px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
+          {user && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <div style={{ textAlign: 'right' }}>
+                <p style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-main)', margin: 0 }}>{user.name}</p>
+                <p style={{ fontSize: '11px', color: 'var(--text-muted)', margin: 0 }}>Workspace Admin</p>
+              </div>
+              <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--border-light)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <FiUser style={{ color: 'var(--text-muted)' }} />
+              </div>
+            </div>
+          )}
+          <button
+            onClick={handleLogout}
+            style={{ 
+              background: '#fee2e2', 
+              color: '#ef4444', 
+              padding: '10px 16px', 
+              borderRadius: '10px', 
+              fontSize: '13px', 
+              fontWeight: '700',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}
+          >
+            <FiLogOut /> Logout
+          </button>
+        </div>
+      </nav>
 
-        {/* Stats Row */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '24px', marginBottom: '40px' }}>
+      <main style={{ maxWidth: '1200px', margin: '40px auto', padding: '0 24px' }}>
+        {/* Welcome Header */}
+        <div style={{ marginBottom: '40px', animation: 'fadeIn 0.5s ease-out' }}>
+          <h2 style={{ fontSize: '32px', fontWeight: '800', color: 'var(--text-main)', marginBottom: '8px' }}>Workspace Overview</h2>
+          <p style={{ color: 'var(--text-muted)', fontSize: '16px' }}>Track your progress and manage your daily objectives.</p>
+        </div>
+
+        {/* Stats Grid */}
+        <div style={{ 
+          display: 'grid', 
+          gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', 
+          gap: '24px', 
+          marginBottom: '48px' 
+        }}>
           {[
-            { label: 'Total Tasks', value: stats.total, bgColor: '#667eea', icon: <FiList /> },
-            { label: 'Completed', value: stats.completed, bgColor: '#27ae60', icon: <FiCheckCircle /> },
-            { label: 'In Progress', value: stats.inProgress, bgColor: '#f39c12', icon: <FiActivity /> },
-            { label: 'Pending', value: stats.pending, bgColor: '#e74c3c', icon: <FiClock /> }
-          ].map((stat, idx) => (
-            <div key={idx} style={{ background: 'white', padding: '28px', borderRadius: '12px', boxShadow: '0 2px 12px rgba(0, 0, 0, 0.08)', borderTop: `4px solid ${stat.bgColor}`, transition: 'all 0.3s ease', cursor: 'pointer' }} onMouseOver={(e) => { e.currentTarget.style.boxShadow = '0 6px 20px rgba(0, 0, 0, 0.12)'; e.currentTarget.style.transform = 'translateY(-4px)'; }} onMouseOut={(e) => { e.currentTarget.style.boxShadow = '0 2px 12px rgba(0, 0, 0, 0.08)'; e.currentTarget.style.transform = 'translateY(0)'; }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
+            { label: 'Total Tasks', value: stats.total, color: 'var(--primary)', icon: <FiList /> },
+            { label: 'In Progress', value: stats.inProgress, color: '#f59e0b', icon: <FiActivity /> },
+            { label: 'Completed', value: stats.completed, color: '#10b981', icon: <FiCheckCircle /> },
+            { label: 'Pending', value: stats.pending, color: '#ef4444', icon: <FiClock /> }
+          ].map((s, i) => (
+            <div key={i} style={{ 
+              background: 'white', 
+              padding: '24px', 
+              borderRadius: '20px', 
+              boxShadow: 'var(--shadow-md)',
+              border: '1px solid var(--border-light)',
+              animation: `fadeIn 0.5s ease-out ${i * 0.1}s both`
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
-                  <p style={{ color: '#999', fontSize: '12px', fontWeight: '600', margin: 0, textTransform: 'uppercase', letterSpacing: '0.8px' }}>{stat.label}</p>
-                  <p style={{ color: stat.bgColor, fontSize: '36px', fontWeight: '700', margin: '12px 0 0 0' }}>{stat.value}</p>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '14px', fontWeight: '600', marginBottom: '4px' }}>{s.label}</p>
+                  <p style={{ fontSize: '32px', fontWeight: '800', color: 'var(--text-main)', margin: 0 }}>{s.value}</p>
                 </div>
-                <div style={{ fontSize: '32px', opacity: 0.3 }}>{stat.icon}</div>
+                <div style={{ 
+                  width: '48px', 
+                  height: '48px', 
+                  borderRadius: '12px', 
+                  background: `${s.color}15`, 
+                  color: s.color,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '24px'
+                }}>
+                  {s.icon}
+                </div>
               </div>
             </div>
           ))}
         </div>
 
-        {/* Add Task Section */}
-        <div style={{ background: 'white', padding: '32px', borderRadius: '12px', marginBottom: '32px', boxShadow: '0 2px 12px rgba(0, 0, 0, 0.08)' }}>
-          <h2 style={{ fontSize: '20px', fontWeight: '700', color: '#1a1a1a', margin: '0 0 24px 0' }}>Create New Task</h2>
-          <form onSubmit={handleAddTask}>
-            <div style={{ marginBottom: '16px' }}>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#333', marginBottom: '8px' }}>Task Title *</label>
+        {/* Actions & Filters */}
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center', 
+          marginBottom: '32px',
+          flexWrap: 'wrap',
+          gap: '20px'
+        }}>
+          <div style={{ display: 'flex', gap: '12px', background: 'white', padding: '6px', borderRadius: '12px', border: '1px solid var(--border-light)' }}>
+            {['all', 'pending', 'in-progress', 'completed'].map(f => (
+              <button
+                key={f}
+                onClick={() => setFilter(f)}
+                style={{ 
+                  padding: '8px 16px', 
+                  borderRadius: '8px', 
+                  fontSize: '13px', 
+                  fontWeight: '700',
+                  background: filter === f ? 'var(--primary)' : 'transparent',
+                  color: filter === f ? 'white' : 'var(--text-muted)',
+                  textTransform: 'capitalize'
+                }}
+              >
+                {f.replace('-', ' ')}
+              </button>
+            ))}
+          </div>
+
+          <div style={{ display: 'flex', gap: '16px', flex: 1, justifyContent: 'flex-end' }}>
+            <div style={{ position: 'relative', maxWidth: '300px', width: '100%' }}>
+              <FiSearch style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
               <input
                 type="text"
-                placeholder="What needs to be done?"
-                value={taskTitle}
-                onChange={(e) => setTaskTitle(e.target.value)}
-                required
-                style={{ width: '100%', padding: '12px 16px', border: '2px solid #e0e0e0', borderRadius: '8px', fontSize: '14px', boxSizing: 'border-box', transition: 'all 0.3s ease', fontFamily: 'inherit' }}
-                onFocus={(e) => { e.target.style.borderColor = '#667eea'; e.target.style.boxShadow = '0 0 0 4px rgba(102, 126, 234, 0.1)'; }}
-                onBlur={(e) => { e.target.style.borderColor = '#e0e0e0'; e.target.style.boxShadow = 'none'; }}
+                placeholder="Search tasks..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                style={{ 
+                  width: '100%', 
+                  padding: '12px 16px 12px 40px', 
+                  borderRadius: '12px', 
+                  border: '1px solid var(--border-light)',
+                  background: 'white',
+                  fontSize: '14px',
+                  outline: 'none'
+                }}
               />
             </div>
-
-            <div style={{ marginBottom: '20px' }}>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#333', marginBottom: '8px' }}>Description</label>
-              <textarea
-                placeholder="Add details about your task..."
-                value={taskDescription}
-                onChange={(e) => setTaskDescription(e.target.value)}
-                style={{ width: '100%', padding: '12px 16px', border: '2px solid #e0e0e0', borderRadius: '8px', fontSize: '14px', minHeight: '100px', boxSizing: 'border-box', transition: 'all 0.3s ease', resize: 'vertical', fontFamily: 'inherit' }}
-                onFocus={(e) => { e.target.style.borderColor = '#667eea'; e.target.style.boxShadow = '0 0 0 4px rgba(102, 126, 234, 0.1)'; }}
-                onBlur={(e) => { e.target.style.borderColor = '#e0e0e0'; e.target.style.boxShadow = 'none'; }}
-              />
-            </div>
-
             <button
-              type="submit"
-              style={{ background: '#FE6337', color: 'white', padding: '12px 32px', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: '600', cursor: 'pointer', transition: 'all 0.3s ease', boxShadow: '0 2px 8px rgba(254, 99, 55, 0.3)', display: 'flex', alignItems: 'center', gap: '8px' }}
-              onMouseOver={(e) => { e.currentTarget.style.background = '#E54D23'; e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 4px 12px rgba(254, 99, 55, 0.4)'; }}
-              onMouseOut={(e) => { e.currentTarget.style.background = '#FE6337'; e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 2px 8px rgba(254, 99, 55, 0.3)'; }}
-            >
-              <FiPlus /> Add Task
-            </button>
-          </form>
-        </div>
-
-        {/* Filter Tabs */}
-        <div style={{ display: 'flex', gap: '12px', marginBottom: '32px', flexWrap: 'wrap' }}>
-          {[
-            { value: 'all', label: 'All Tasks', color: '#667eea' },
-            { value: 'pending', label: 'Pending', color: '#e74c3c' },
-            { value: 'in-progress', label: 'In Progress', color: '#f39c12' },
-            { value: 'completed', label: 'Completed', color: '#27ae60' }
-          ].map(f => (
-            <button
-              key={f.value}
-              onClick={() => setFilter(f.value)}
-              style={{
-                padding: '10px 20px',
-                border: filter === f.value ? 'none' : `2px solid ${f.color}`,
-                background: filter === f.value ? f.color : 'white',
-                color: filter === f.value ? 'white' : f.color,
-                borderRadius: '8px',
-                fontSize: '13px',
-                fontWeight: '600',
-                cursor: 'pointer',
-                transition: 'all 0.3s ease',
-                boxShadow: filter === f.value ? `0 4px 12px ${f.color}33` : 'none'
+              onClick={() => setIsAddingTask(true)}
+              style={{ 
+                background: 'var(--primary)', 
+                color: 'white', 
+                padding: '12px 24px', 
+                borderRadius: '12px', 
+                fontSize: '14px', 
+                fontWeight: '700',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                boxShadow: '0 4px 12px rgba(99, 102, 241, 0.3)'
               }}
-              onMouseOver={(e) => { if (filter !== f.value) { e.target.style.background = f.color + '10'; } }}
-              onMouseOut={(e) => { if (filter !== f.value) { e.target.style.background = 'white'; } }}
             >
-              {f.label}
+              <FiPlus /> New Task
             </button>
-          ))}
+          </div>
         </div>
 
-        {/* Tasks List */}
-        {filteredTasks.length === 0 ? (
-          <div style={{ background: 'white', padding: '80px 20px', borderRadius: '12px', textAlign: 'center', boxShadow: '0 2px 12px rgba(0, 0, 0, 0.08)' }}>
-            <div style={{ fontSize: '48px', marginBottom: '16px', opacity: 0.3 }}>📋</div>
-            <p style={{ fontSize: '18px', color: '#999', margin: 0, fontWeight: '500' }}>
-              {filter === 'all' ? 'No tasks yet. Create one to get started!' : `No ${filter} tasks`}
-            </p>
+        {/* Add Task Modal-like Form */}
+        {isAddingTask && (
+          <div style={{ 
+            background: 'white', 
+            padding: '32px', 
+            borderRadius: '24px', 
+            marginBottom: '40px', 
+            boxShadow: 'var(--shadow-lg)',
+            border: '1px solid var(--border-light)',
+            animation: 'fadeIn 0.3s ease-out'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+              <h3 style={{ fontSize: '20px', fontWeight: '800' }}>Create New Task</h3>
+              <button onClick={() => setIsAddingTask(false)} style={{ color: 'var(--text-muted)', background: 'none' }}><FiX size={24} /></button>
+            </div>
+            <form onSubmit={handleAddTask}>
+              <div style={{ marginBottom: '20px' }}>
+                <input
+                  type="text"
+                  placeholder="Task Title"
+                  value={taskTitle}
+                  onChange={(e) => setTaskTitle(e.target.value)}
+                  style={{ width: '100%', padding: '14px', borderRadius: '12px', border: '1px solid var(--border-light)', fontSize: '16px', fontWeight: '600' }}
+                />
+              </div>
+              <div style={{ marginBottom: '24px' }}>
+                <textarea
+                  placeholder="Description (Optional)"
+                  value={taskDescription}
+                  onChange={(e) => setTaskDescription(e.target.value)}
+                  style={{ width: '100%', padding: '14px', borderRadius: '12px', border: '1px solid var(--border-light)', fontSize: '15px', minHeight: '100px' }}
+                />
+              </div>
+              <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+                <button type="button" onClick={() => setIsAddingTask(false)} style={{ padding: '12px 24px', borderRadius: '10px', background: 'var(--bg-app)', color: 'var(--text-main)', fontWeight: '700' }}>Cancel</button>
+                <button type="submit" style={{ padding: '12px 32px', borderRadius: '10px', background: 'var(--primary)', color: 'white', fontWeight: '700' }}>Create Task</button>
+              </div>
+            </form>
           </div>
-        ) : (
-          <div style={{ display: 'grid', gap: '16px' }}>
-            {filteredTasks.map((task) => (
-              <div
-                key={task._id}
-                style={{ background: 'white', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 2px 12px rgba(0, 0, 0, 0.08)', transition: 'all 0.3s ease', borderLeft: `5px solid ${task.status === 'completed' ? '#27ae60' : task.status === 'in-progress' ? '#f39c12' : '#e74c3c'}` }}
-                onMouseOver={(e) => { e.currentTarget.style.boxShadow = '0 6px 20px rgba(0, 0, 0, 0.12)'; e.currentTarget.style.transform = 'translateY(-3px)'; }}
-                onMouseOut={(e) => { e.currentTarget.style.boxShadow = '0 2px 12px rgba(0, 0, 0, 0.08)'; e.currentTarget.style.transform = 'translateY(0)'; }}
-              >
-                {editingTaskId === task._id ? (
-                  // Edit Mode
-                  <div style={{ padding: '24px', background: '#f9f9f9' }}>
-                    <input
-                      type="text"
-                      value={editTitle}
-                      onChange={(e) => setEditTitle(e.target.value)}
-                      style={{ width: '100%', padding: '12px 16px', border: '2px solid #667eea', borderRadius: '8px', fontSize: '14px', marginBottom: '12px', boxSizing: 'border-box', fontFamily: 'inherit', fontWeight: '600' }}
-                    />
-                    <textarea
-                      value={editDescription}
-                      onChange={(e) => setEditDescription(e.target.value)}
-                      style={{ width: '100%', padding: '12px 16px', border: '2px solid #e0e0e0', borderRadius: '8px', fontSize: '14px', minHeight: '80px', marginBottom: '12px', boxSizing: 'border-box', resize: 'vertical', fontFamily: 'inherit' }}
-                    />
-                    <select
-                      value={editStatus}
-                      onChange={(e) => setEditStatus(e.target.value)}
-                      style={{ width: '100%', padding: '12px 16px', border: '2px solid #e0e0e0', borderRadius: '8px', fontSize: '14px', marginBottom: '16px', boxSizing: 'border-box', fontFamily: 'inherit' }}
-                    >
-                      <option value="pending">Pending</option>
-                      <option value="in-progress">In Progress</option>
-                      <option value="completed">Completed</option>
-                    </select>
+        )}
 
+        {/* Task List */}
+        <div style={{ display: 'grid', gap: '16px' }}>
+          {filteredTasks.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '80px', background: 'white', borderRadius: '24px', border: '1px dashed var(--border-light)' }}>
+              <p style={{ color: 'var(--text-muted)', fontSize: '16px' }}>No tasks found in this view.</p>
+            </div>
+          ) : (
+            filteredTasks.map((task, idx) => (
+              <div key={task._id} style={{ 
+                background: 'white', 
+                borderRadius: '20px', 
+                padding: '24px', 
+                boxShadow: 'var(--shadow-sm)',
+                border: '1px solid var(--border-light)',
+                transition: 'all 0.3s ease',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                animation: `slideInRight 0.4s ease-out ${idx * 0.05}s both`
+              }} className="task-card">
+                {editingTaskId === task._id ? (
+                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    <input value={editTitle} onChange={(e) => setEditTitle(e.target.value)} style={{ padding: '10px', borderRadius: '8px', border: '1px solid var(--primary)' }} />
+                    <textarea value={editDescription} onChange={(e) => setEditDescription(e.target.value)} style={{ padding: '10px', borderRadius: '8px', border: '1px solid var(--border-light)' }} />
                     <div style={{ display: 'flex', gap: '10px' }}>
-                      <button
-                        onClick={() => handleUpdateTask(task._id)}
-                        style={{ flex: 1, padding: '10px', background: '#27ae60', color: 'white', border: 'none', borderRadius: '6px', fontWeight: '600', cursor: 'pointer', fontSize: '13px', transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
-                        onMouseOver={(e) => e.target.style.background = '#229954'}
-                        onMouseOut={(e) => e.target.style.background = '#27ae60'}
-                      >
-                        <FiSave /> Save
-                      </button>
-                      <button
-                        onClick={handleEditCancel}
-                        style={{ flex: 1, padding: '10px', background: '#bdc3c7', color: 'white', border: 'none', borderRadius: '6px', fontWeight: '600', cursor: 'pointer', fontSize: '13px', transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
-                        onMouseOver={(e) => e.target.style.background = '#95a5a6'}
-                        onMouseOut={(e) => e.target.style.background = '#bdc3c7'}
-                      >
-                        <FiX /> Cancel
-                      </button>
+                      <select value={editStatus} onChange={(e) => setEditStatus(e.target.value)} style={{ padding: '8px', borderRadius: '8px' }}>
+                        <option value="pending">Pending</option>
+                        <option value="in-progress">In Progress</option>
+                        <option value="completed">Completed</option>
+                      </select>
+                      <button onClick={() => handleUpdateTask(task._id)} style={{ padding: '8px 16px', background: 'var(--primary)', color: 'white', borderRadius: '8px' }}>Save</button>
+                      <button onClick={() => setEditingTaskId(null)} style={{ padding: '8px 16px', background: 'var(--bg-app)', borderRadius: '8px' }}>Cancel</button>
                     </div>
                   </div>
                 ) : (
-                  // View Mode
-                  <div style={{ padding: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
+                  <>
                     <div style={{ flex: 1 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                        <h3 style={{ fontSize: '16px', fontWeight: '600', color: '#1a1a1a', margin: 0 }}>{task.title}</h3>
-                        <span
-                          style={{
-                            padding: '6px 12px',
-                            borderRadius: '20px',
-                            fontSize: '11px',
-                            fontWeight: '700',
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.5px',
-                            background: task.status === 'completed' ? '#d4edda' : task.status === 'in-progress' ? '#cce5ff' : '#fff3cd',
-                            color: task.status === 'completed' ? '#155724' : task.status === 'in-progress' ? '#004085' : '#856404'
-                          }}
-                        >
-                          {task.status === 'completed' ? 'Done' : task.status === 'in-progress' ? 'In Progress' : 'Todo'}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+                        <h4 style={{ fontSize: '17px', fontWeight: '700', color: 'var(--text-main)', margin: 0 }}>{task.title}</h4>
+                        <span style={{ 
+                          padding: '4px 12px', 
+                          borderRadius: '20px', 
+                          fontSize: '11px', 
+                          fontWeight: '800', 
+                          textTransform: 'uppercase',
+                          background: task.status === 'completed' ? '#d1fae5' : task.status === 'in-progress' ? '#fef3c7' : '#fee2e2',
+                          color: task.status === 'completed' ? '#059669' : task.status === 'in-progress' ? '#d97706' : '#dc2626'
+                        }}>
+                          {task.status.replace('-', ' ')}
                         </span>
                       </div>
-                      {task.description && <p style={{ fontSize: '13px', color: '#666', margin: '8px 0 0 0', lineHeight: '1.5' }}>{task.description}</p>}
+                      {task.description && <p style={{ fontSize: '14px', color: 'var(--text-muted)', margin: 0 }}>{task.description}</p>}
                     </div>
-
-                    <div style={{ display: 'flex', gap: '8px', marginLeft: '16px' }}>
-                      <button
-                        onClick={() => handleEditStart(task)}
-                        style={{ padding: '8px 12px', background: '#FE6337', color: 'white', border: 'none', borderRadius: '6px', fontSize: '12px', fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: '6px' }}
-                        onMouseOver={(e) => e.currentTarget.style.background = '#E54D23'}
-                        onMouseOut={(e) => e.currentTarget.style.background = '#FE6337'}
+                    <div style={{ display: 'flex', gap: '12px' }}>
+                      <button 
+                        onClick={() => {
+                          setEditingTaskId(task._id);
+                          setEditTitle(task.title);
+                          setEditDescription(task.description);
+                          setEditStatus(task.status);
+                        }} 
+                        style={{ padding: '10px', borderRadius: '10px', background: 'var(--bg-app)', color: 'var(--text-muted)' }}
                       >
-                        <FiEdit2 /> Edit
+                        <FiEdit2 />
                       </button>
-                      <button
-                        onClick={() => handleDeleteTask(task._id)}
-                        style={{ padding: '8px 12px', background: '#e74c3c', color: 'white', border: 'none', borderRadius: '6px', fontSize: '12px', fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: '6px' }}
-                        onMouseOver={(e) => e.currentTarget.style.background = '#c0392b'}
-                        onMouseOut={(e) => e.currentTarget.style.background = '#e74c3c'}
+                      <button 
+                        onClick={() => handleDeleteTask(task._id)} 
+                        style={{ padding: '10px', borderRadius: '10px', background: '#fee2e2', color: '#ef4444' }}
                       >
-                        <FiTrash2 /> Delete
+                        <FiTrash2 />
                       </button>
                     </div>
-                  </div>
+                  </>
                 )}
               </div>
-            ))}
-          </div>
-        )}
-      </div>
+            ))
+          )}
+        </div>
+      </main>
+
+      <style jsx>{`
+        .task-card:hover {
+          transform: translateY(-2px);
+          box-shadow: var(--shadow-md);
+          border-color: var(--primary);
+        }
+      `}</style>
     </div>
+  );
+}
   );
 }
