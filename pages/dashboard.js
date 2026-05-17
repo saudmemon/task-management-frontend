@@ -27,7 +27,13 @@ export default function Dashboard() {
   const router = useRouter();
   const [user, setUser] = useState(null);
   const [isProtected, setIsProtected] = useState(false);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  useEffect(() => {
+    if (window.innerWidth > 768) {
+      setIsSidebarOpen(true);
+    }
+  }, []);
 
   const { data: taskData, mutate } = useSWR(isProtected ? '/tasks' : null, fetcher, {
     revalidateOnFocus: true,
@@ -117,17 +123,7 @@ export default function Dashboard() {
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg-app)' }}>
       {/* Sidebar */}
-      <aside style={{ 
-        width: isSidebarOpen ? '280px' : '0px', 
-        background: '#0f172a', 
-        color: 'white', 
-        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-        overflow: 'hidden',
-        display: 'flex',
-        flexDirection: 'column',
-        position: 'relative',
-        zIndex: 100
-      }} className="sidebar">
+      <aside className={`sidebar ${isSidebarOpen ? 'open' : 'closed'}`}>
         <div style={{ padding: '32px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <div style={{ background: 'var(--primary)', padding: '8px', borderRadius: '10px' }}>
@@ -402,6 +398,22 @@ export default function Dashboard() {
           transform: scale(1.05);
           box-shadow: 0 8px 16px rgba(99, 102, 241, 0.4) !important;
         }
+        .sidebar {
+          background: #0f172a;
+          color: white;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          overflow: hidden;
+          display: flex;
+          flex-direction: column;
+          position: relative;
+          z-index: 100;
+        }
+        .sidebar.open {
+          width: 280px;
+        }
+        .sidebar.closed {
+          width: 0px;
+        }
         @media (min-width: 769px) {
           .mobile-close-btn { display: none !important; }
         }
@@ -409,10 +421,21 @@ export default function Dashboard() {
           .sidebar { 
             position: fixed !important;
             height: 100vh;
-            z-index: 1000;
+            left: 0;
+            top: 0;
+            z-index: 1000 !important;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+          }
+          .sidebar.closed {
+            transform: translateX(-100%);
+            width: 280px !important;
+          }
+          .sidebar.open {
+            transform: translateX(0);
+            width: 280px !important;
           }
           .user-info { display: none !important; }
-          .main-content { padding: 24px !important; }
+          .main-content { padding: 24px !important; width: 100vw; overflow-x: hidden; }
           .top-header { padding: 16px 24px !important; }
           .search-input { width: 100% !important; max-width: 200px; }
           .stats-grid { grid-template-columns: 1fr 1fr !important; gap: 16px !important; }
