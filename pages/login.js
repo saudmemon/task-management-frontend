@@ -107,7 +107,7 @@ export default function Login() {
       </div>
 
       {/* Right Side: Auth Form */}
-      <div style={{ 
+      <div className="auth-container" style={{ 
         flex: '1', 
         display: 'flex', 
         alignItems: 'center', 
@@ -157,6 +157,7 @@ export default function Login() {
             <button
               type="submit"
               disabled={isLoading}
+              className="primary-btn"
               style={{ 
                 width: '100%', 
                 padding: '16px', 
@@ -172,7 +173,7 @@ export default function Login() {
                 boxShadow: '0 10px 20px rgba(99, 102, 241, 0.2)'
               }}
             >
-              {isLoading ? 'Authenticating...' : <>Sign In <FiArrowRight /></>}
+              {isLoading ? 'Authenticating...' : <>Sign In <FiArrowRight className="btn-icon" /></>}
             </button>
           </form>
 
@@ -191,9 +192,31 @@ export default function Login() {
       </div>
 
       <style jsx>{`
+        .primary-btn {
+          transition: all 0.3s ease;
+        }
+        .primary-btn:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 15px 25px rgba(99, 102, 241, 0.3) !important;
+          filter: brightness(1.1);
+        }
+        .primary-btn:active {
+          transform: translateY(0);
+        }
+        .btn-icon {
+          transition: transform 0.3s ease;
+        }
+        .primary-btn:hover .btn-icon {
+          transform: translateX(4px);
+        }
         @media (max-width: 1024px) {
           .auth-sidebar {
             display: none !important;
+          }
+        }
+        @media (max-width: 480px) {
+          .auth-container {
+            padding: 24px !important;
           }
         }
       `}</style>

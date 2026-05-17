@@ -87,7 +87,7 @@ export default function Register() {
       </div>
 
       {/* Right Side: Register Form */}
-      <div style={{ 
+      <div className="auth-container" style={{ 
         flex: '1', 
         display: 'flex', 
         alignItems: 'center', 
@@ -150,6 +150,7 @@ export default function Register() {
             <button
               type="submit"
               disabled={isLoading}
+              className="primary-btn"
               style={{ 
                 width: '100%', 
                 padding: '16px', 
@@ -165,7 +166,7 @@ export default function Register() {
                 boxShadow: '0 10px 20px rgba(236, 72, 153, 0.2)'
               }}
             >
-              {isLoading ? 'Creating...' : <>Join Now <FiArrowRight /></>}
+              {isLoading ? 'Creating...' : <>Join Now <FiArrowRight className="btn-icon" /></>}
             </button>
           </form>
 
@@ -178,9 +179,31 @@ export default function Register() {
       </div>
 
       <style jsx>{`
+        .primary-btn {
+          transition: all 0.3s ease;
+        }
+        .primary-btn:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 15px 25px rgba(236, 72, 153, 0.3) !important;
+          filter: brightness(1.1);
+        }
+        .primary-btn:active {
+          transform: translateY(0);
+        }
+        .btn-icon {
+          transition: transform 0.3s ease;
+        }
+        .primary-btn:hover .btn-icon {
+          transform: translateX(4px);
+        }
         @media (max-width: 1024px) {
           .auth-sidebar {
             display: none !important;
+          }
+        }
+        @media (max-width: 480px) {
+          .auth-container {
+            padding: 24px !important;
           }
         }
       `}</style>

@@ -128,11 +128,16 @@ export default function Dashboard() {
         position: 'relative',
         zIndex: 100
       }} className="sidebar">
-        <div style={{ padding: '32px 24px', display: 'flex', alignItems: 'center', gap: '12px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-          <div style={{ background: 'var(--primary)', padding: '8px', borderRadius: '10px' }}>
-            <FiZap size={24} />
+        <div style={{ padding: '32px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{ background: 'var(--primary)', padding: '8px', borderRadius: '10px' }}>
+              <FiZap size={24} />
+            </div>
+            <span style={{ fontSize: '20px', fontWeight: '800', letterSpacing: '-0.5px' }}>TaskMaster</span>
           </div>
-          <span style={{ fontSize: '20px', fontWeight: '800', letterSpacing: '-0.5px' }}>TaskMaster</span>
+          <button className="mobile-close-btn" onClick={() => setIsSidebarOpen(false)} style={{ background: 'transparent', border: 'none', color: 'white', cursor: 'pointer', padding: '4px' }}>
+            <FiX size={24} />
+          </button>
         </div>
 
         <nav style={{ flex: 1, padding: '32px 16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -173,7 +178,7 @@ export default function Dashboard() {
       {/* Main Content */}
       <main style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100vh', overflowY: 'auto' }}>
         {/* Top Navbar */}
-        <header style={{ 
+        <header className="top-header" style={{ 
           padding: '20px 40px', 
           background: 'rgba(248, 250, 252, 0.8)', 
           backdropFilter: 'blur(10px)',
@@ -186,16 +191,17 @@ export default function Dashboard() {
           borderBottom: '1px solid var(--border-light)'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-            <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} style={{ background: 'white', padding: '10px', borderRadius: '10px', boxShadow: 'var(--shadow-sm)', border: '1px solid var(--border-light)' }}>
+            <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="action-btn" style={{ background: 'white', padding: '10px', borderRadius: '10px', boxShadow: 'var(--shadow-sm)', border: '1px solid var(--border-light)' }}>
               <FiMenu size={20} color="var(--text-main)" />
             </button>
-            <div style={{ position: 'relative' }}>
+            <div style={{ position: 'relative' }} className="search-container">
               <FiSearch style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
               <input 
                 type="text" 
                 placeholder="Search your tasks..." 
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                className="search-input"
                 style={{ width: '320px', padding: '12px 16px 12px 44px', borderRadius: '12px', border: '1px solid var(--border-light)', outline: 'none', background: 'white', fontSize: '14px' }} 
               />
             </div>
@@ -206,15 +212,15 @@ export default function Dashboard() {
               <p style={{ margin: 0, fontSize: '14px', fontWeight: '700' }}>{user?.name}</p>
               <p style={{ margin: 0, fontSize: '12px', color: 'var(--text-muted)' }}>{user?.email}</p>
             </div>
-            <div style={{ width: '44px', height: '44px', borderRadius: '50%', background: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: '800', boxShadow: '0 4px 12px rgba(99, 102, 241, 0.3)' }}>
+            <div className="user-avatar" style={{ width: '44px', height: '44px', borderRadius: '50%', background: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: '800', boxShadow: '0 4px 12px rgba(99, 102, 241, 0.3)' }}>
               {user?.name?.charAt(0).toUpperCase()}
             </div>
           </div>
         </header>
 
-        <div style={{ padding: '40px' }}>
+        <div className="main-content" style={{ padding: '40px' }}>
           {/* Dashboard Header */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '40px' }}>
+          <div className="dashboard-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '40px' }}>
             <div>
               <h2 style={{ fontSize: '36px', fontWeight: '800', letterSpacing: '-1px', color: '#0f172a', marginBottom: '8px' }}>
                 Hello, {user?.name?.split(' ')[0]} 👋
@@ -223,6 +229,7 @@ export default function Dashboard() {
             </div>
             <button 
               onClick={() => setIsAddingTask(true)}
+              className="primary-btn"
               style={{ 
                 background: '#0d9488', 
                 color: 'white', 
@@ -241,14 +248,14 @@ export default function Dashboard() {
           </div>
 
           {/* Stats Section */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '24px', marginBottom: '48px' }}>
+          <div className="stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '24px', marginBottom: '48px' }}>
             {[
               { label: 'Total Tasks', value: stats.total, color: '#6366f1', icon: <FiList /> },
               { label: 'In Progress', value: stats.inProgress, color: '#f59e0b', icon: <FiActivity /> },
               { label: 'Completed', value: stats.completed, color: '#10b981', icon: <FiCheckCircle /> },
               { label: 'Pending', value: stats.pending, color: '#ef4444', icon: <FiClock /> },
             ].map((stat, i) => (
-              <div key={i} style={{ background: 'white', padding: '24px', borderRadius: '24px', boxShadow: 'var(--shadow-sm)', border: '1px solid var(--border-light)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div key={i} className="stat-card" style={{ background: 'white', padding: '24px', borderRadius: '24px', boxShadow: 'var(--shadow-sm)', border: '1px solid var(--border-light)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
                   <p style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-muted)', marginBottom: '8px' }}>{stat.label}</p>
                   <p style={{ fontSize: '32px', fontWeight: '800', color: 'var(--text-main)', margin: 0 }}>{stat.value}</p>
@@ -261,7 +268,7 @@ export default function Dashboard() {
           </div>
 
           {/* Task Grid */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '24px' }}>
+          <div className="task-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '24px' }}>
             {isAddingTask && (
               <div className="glass" style={{ padding: '24px', borderRadius: '24px', border: '2px dashed #6366f1', animation: 'fadeIn 0.4s', background: 'white' }}>
                 <input 
@@ -277,8 +284,8 @@ export default function Dashboard() {
                   style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0', background: '#f8fafc', fontSize: '14px', outline: 'none', minHeight: '80px', resize: 'none' }}
                 />
                 <div style={{ display: 'flex', gap: '12px', marginTop: '16px' }}>
-                  <button onClick={handleAddTask} style={{ flex: 1, background: '#0d9488', color: 'white', padding: '12px', borderRadius: '10px', fontWeight: '700' }}>Create</button>
-                  <button onClick={() => setIsAddingTask(false)} style={{ flex: 1, background: '#e2e8f0', padding: '12px', borderRadius: '10px', fontWeight: '700' }}>Cancel</button>
+                  <button onClick={handleAddTask} className="primary-btn" style={{ flex: 1, background: '#0d9488', color: 'white', padding: '12px', borderRadius: '10px', fontWeight: '700' }}>Create</button>
+                  <button onClick={() => setIsAddingTask(false)} className="action-btn" style={{ flex: 1, background: '#e2e8f0', padding: '12px', borderRadius: '10px', fontWeight: '700' }}>Cancel</button>
                 </div>
               </div>
             )}
@@ -303,8 +310,8 @@ export default function Dashboard() {
                       <option value="completed">Completed</option>
                     </select>
                     <div style={{ display: 'flex', gap: '8px' }}>
-                      <button onClick={() => handleUpdateTask(task._id)} style={{ flex: 1, background: 'var(--primary)', color: 'white', padding: '8px', borderRadius: '8px' }}>Save</button>
-                      <button onClick={() => setEditingTaskId(null)} style={{ flex: 1, background: 'var(--border-light)', padding: '8px', borderRadius: '8px' }}>Cancel</button>
+                      <button onClick={() => handleUpdateTask(task._id)} className="primary-btn" style={{ flex: 1, background: 'var(--primary)', color: 'white', padding: '8px', borderRadius: '8px' }}>Save</button>
+                      <button onClick={() => setEditingTaskId(null)} className="action-btn" style={{ flex: 1, background: 'var(--border-light)', padding: '8px', borderRadius: '8px' }}>Cancel</button>
                     </div>
                   </div>
                 ) : (
@@ -322,8 +329,8 @@ export default function Dashboard() {
                         {task.status.replace('-', ' ')}
                       </span>
                       <div style={{ display: 'flex', gap: '8px' }}>
-                        <button onClick={() => { setEditingTaskId(task._id); setEditTitle(task.title); setEditDescription(task.description); setEditStatus(task.status); }} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}><FiEdit2 size={16} /></button>
-                        <button onClick={() => handleDeleteTask(task._id)} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }}><FiTrash2 size={16} /></button>
+                        <button className="icon-btn" onClick={() => { setEditingTaskId(task._id); setEditTitle(task.title); setEditDescription(task.description); setEditStatus(task.status); }} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}><FiEdit2 size={16} /></button>
+                        <button className="icon-btn icon-btn-danger" onClick={() => handleDeleteTask(task._id)} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }}><FiTrash2 size={16} /></button>
                       </div>
                     </div>
                     <h4 style={{ fontSize: '18px', fontWeight: '800', marginBottom: '8px', color: 'var(--text-main)' }}>{task.title}</h4>
@@ -349,12 +356,73 @@ export default function Dashboard() {
       <style jsx>{`
         .task-card:hover {
           transform: translateY(-5px);
-          box-shadow: var(--shadow-lg);
-          border-color: var(--primary);
+          box-shadow: var(--shadow-lg) !important;
+          border-color: var(--primary) !important;
+        }
+        .stat-card {
+          transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .stat-card:hover {
+          transform: translateY(-5px);
+          box-shadow: var(--shadow-md) !important;
+        }
+        .primary-btn {
+          transition: all 0.2s ease;
+        }
+        .primary-btn:hover {
+          transform: translateY(-2px);
+          filter: brightness(1.1);
+          box-shadow: 0 14px 24px rgba(13, 148, 136, 0.3) !important;
+        }
+        .primary-btn:active {
+          transform: translateY(0);
+        }
+        .action-btn {
+          transition: all 0.2s ease;
+        }
+        .action-btn:hover {
+          transform: translateY(-2px);
+          box-shadow: var(--shadow-md) !important;
+        }
+        .icon-btn {
+          transition: all 0.2s ease;
+        }
+        .icon-btn:hover {
+          color: var(--primary) !important;
+          transform: scale(1.1);
+        }
+        .icon-btn-danger:hover {
+          color: #dc2626 !important;
+        }
+        .user-avatar {
+          transition: all 0.3s ease;
+          cursor: pointer;
+        }
+        .user-avatar:hover {
+          transform: scale(1.05);
+          box-shadow: 0 8px 16px rgba(99, 102, 241, 0.4) !important;
+        }
+        @media (min-width: 769px) {
+          .mobile-close-btn { display: none !important; }
         }
         @media (max-width: 768px) {
-          .sidebar { width: 0 !important; }
+          .sidebar { 
+            position: fixed !important;
+            height: 100vh;
+            z-index: 1000;
+          }
           .user-info { display: none !important; }
+          .main-content { padding: 24px !important; }
+          .top-header { padding: 16px 24px !important; }
+          .search-input { width: 100% !important; max-width: 200px; }
+          .stats-grid { grid-template-columns: 1fr 1fr !important; gap: 16px !important; }
+          .task-grid { grid-template-columns: 1fr !important; }
+          .dashboard-header { flex-direction: column !important; align-items: flex-start !important; gap: 16px; margin-bottom: 24px !important; }
+        }
+        @media (max-width: 480px) {
+          .stats-grid { grid-template-columns: 1fr !important; }
+          .search-container { display: none !important; } /* Hide search on very small or adjust to full width inside header */
+          .dashboard-header h2 { fontSize: 28px !important; }
         }
       `}</style>
     </div>
